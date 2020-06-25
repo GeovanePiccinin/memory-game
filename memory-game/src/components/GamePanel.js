@@ -9,6 +9,7 @@ class GamePanel extends React.Component {
     };
     this.openedCards = [];
     this.blockClick = false;
+    this.handleCardClick = this.handleCardClick.bind(this);
   }
 
   componentDidMount() {
@@ -56,7 +57,32 @@ class GamePanel extends React.Component {
     this.setState({ cards: cards });
   }
 
-  handleCardClick = (index, cardCode) => {
+  handleCardClick(cardRef) {
+    if(this.openedCards.length < 2 && !this.blockClick) {
+      this.openedCards.push(cardRef);
+      cardRef.turnCard(true);
+    }
+
+    if(this.openedCards.length === 2) {
+      this.blockClick = true;
+      if(this.openedCards[0].cardCode !== this.openedCards[1].cardCode) {
+        const that = this;
+        const turnFirstCardRef = this.openedCards[0].turnCard;
+        const turnnSecondCardRef = this.openedCards[1].turnCard;
+        setTimeout(() => {
+          turnFirstCardRef(false);
+          turnnSecondCardRef(false);
+          that.blockClick = false;
+        }, 1700);
+      } else {
+        this.blockClick = false;        
+      }
+      this.openedCards = [];      
+    }
+
+  }
+
+  /* handleCardClick = (index, cardCode) => {
     if (!!this.state.cards[index].status) return;
 
     if (this.openedCards.length < 2 && !this.blockClick) {
@@ -83,7 +109,7 @@ class GamePanel extends React.Component {
       }
       this.openedCards = [];
     }
-  };
+  }; */
 
   render() {
     return (
@@ -92,8 +118,9 @@ class GamePanel extends React.Component {
           ? this.state.cards.map((item, i) => (
               <Card
                 key={i}
-                imgCode={!!item.status ? item.cardCode : "texture"}
-                onClick={() => this.handleCardClick(i, item.cardCode)}
+                cardCode={item.cardCode}
+                blankImage={"texture"}
+                onClick={this.handleCardClick}
               />
             ))
           : null}
