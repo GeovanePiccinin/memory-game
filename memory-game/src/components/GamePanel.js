@@ -51,12 +51,6 @@ class GamePanel extends React.Component {
     return cards;
   }
 
-  turnCard(index, status) {
-    const cards = this.state.cards.slice();
-    cards[index].status = status;
-    this.setState({ cards: cards });
-  }
-
   handleCardClick(cardRef) {
     if(this.openedCards.length < 2 && !this.blockClick) {
       this.openedCards.push(cardRef);
