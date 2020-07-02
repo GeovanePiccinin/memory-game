@@ -1,18 +1,54 @@
 import React from "react";
 import Card from "./Card";
+import Api from "../api";
+import axios from "axios";
 
 class GamePanel extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       cards: null,
+      listOfCharacters: [],
     };
     this.openedCards = [];
     this.blockClick = false;
   }
 
   componentDidMount() {
-    this.setState({ cards: this.chooseRandomImages(14) });
+    const urlBaseMarvel = "https://gateway.marvel.com:443/v1/public/";
+    const apiKey = "af4b4566925ba7ba9e73e60273ee76b5";
+    const limit = 100;
+
+    const urlCharacters =
+      urlBaseMarvel + "characters?apikey=" + apiKey + "&limit=" + limit;
+    axios
+      .get(urlCharacters)
+      .then((response) => {        
+        const listOfAllCharacters = response.data.data.results;
+        const cardOptions = listOfAllCharacters
+          .filter(
+            (item) =>
+              item.thumbnail.path.split("/").pop() !== "image_not_available" &&
+              item.thumbnail.extension !== "gif"
+          )
+          .map((item) => {
+            return {
+              cardCode: `${item.thumbnail.path}.${item.thumbnail.extension}`,
+              status: 0,
+            };
+          });
+
+        this.shuffleArray(cardOptions);
+        this.setState({ cards: this.chooseRandomImages(14, cardOptions) });
+      })
+      .catch((error) => {
+        console.error(error);
+        const cardOptions = this.generateCardOptions(
+          24,
+          `${process.env.PUBLIC_URL}/assets/images/`
+        );
+        this.setState({ cards: this.chooseRandomImages(14, cardOptions) });
+      });
   }
 
   shuffleArray(array) {
@@ -24,10 +60,17 @@ class GamePanel extends React.Component {
     }
   }
 
-  generateCardOptions = (length) => {
+  heroUrl = (index, urlBase, options = "") => {
+    return `${urlBase}${index}/${options}`;
+  };
+
+  generateCardOptions = (length, urlBase, urlGenerator, options) => {
     const tempArr = [];
-    for (let i = 0; i < length; i++) {
-      tempArr.push({ cardCode: i, status: 0 });
+    for (let i = 1; i <= length; i++) {
+      tempArr.push({
+        cardCode: urlGenerator(i, urlBase, options),
+        status: 0,
+      });
     }
     return tempArr;
   };
@@ -38,8 +81,7 @@ class GamePanel extends React.Component {
     });
   };
 
-  chooseRandomImages(numberOfImages) {
-    const cardOptions = this.generateCardOptions(24);
+  chooseRandomImages(numberOfImages, cardOptions) {
     this.shuffleArray(cardOptions);
     const cards = [
       ...cardOptions.slice(0, numberOfImages),
@@ -92,7 +134,11 @@ class GamePanel extends React.Component {
           ? this.state.cards.map((item, i) => (
               <Card
                 key={i}
-                imgCode={!!item.status ? item.cardCode : "texture"}
+                imgCode={
+                  !!item.status
+                    ? item.cardCode
+                    : `${process.env.PUBLIC_URL}/assets/images/texture.jpg`
+                }
                 onClick={() => this.handleCardClick(i, item.cardCode)}
               />
             ))

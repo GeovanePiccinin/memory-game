@@ -5,7 +5,7 @@ const Card = ({imgCode, onClick}) => {
     return ( 
             <div className="card" onClick={onClick}>
                 <img className="img-fluid" 
-                    src={`${process.env.PUBLIC_URL}/assets/images/${imgCode}.jpg`} 
+                    src={`${imgCode}`} 
                     alt="card"/>
             </div>
         );
